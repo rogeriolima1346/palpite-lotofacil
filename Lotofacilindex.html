@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Gerador de Palpites da Lotofácil</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+      background-color: #f0f0f0;
+    }
+    h1 {
+      color: #7b1fa2;
+    }
+    label {
+      font-weight: bold;
+      margin-top: 10px;
+      display: block;
+    }
+    input, select {
+      padding: 8px;
+      font-size: 16px;
+      margin: 5px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 18px;
+      background-color: #7b1fa2;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+    button:hover {
+      background-color: #9c27b0;
+    }
+    .palpite {
+      font-size: 20px;
+      margin-top: 20px;
+      color: #333;
+      background: #fff;
+      padding: 10px;
+      border-radius: 10px;
+      max-width: 400px;
+      margin: 10px auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .soma {
+      font-size: 14px;
+      color: #666;
+    }
+    .copiar {
+      font-size: 14px;
+      margin-top: 5px;
+      color: #7b1fa2;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    @media (max-width: 600px) {
+      .palpite {
+        font-size: 16px;
+        padding: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Gerador de Palpites da Lotofácil</h1>
+
+  <label for="qtdJogos">Quantos jogos gerar?</label>
+  <input type="number" id="qtdJogos" min="1" max="20" value="1">
+
+  <label for="pares">Quantidade de números pares:</label>
+  <input type="number" id="pares" min="0" max="15" value="7">
+
+  <label for="excluir">Excluir números do último sorteio (separados por vírgula):</label>
+  <input type="text" id="excluir" placeholder="ex: 1,5,8,12">
+
+  <button onclick="gerarPalpites()">Gerar Palpites</button>
+
+  <div id="palpites"></div>
+
+  <script>
+    function gerarPalpites() {
+      const qtdJogos = parseInt(document.getElementById('qtdJogos').value);
+      const qtdPares = parseInt(document.getElementById('pares').value);
+      const excluir = document.getElementById('excluir').value
+        .split(',')
+        .map(n => parseInt(n.trim()))
+        .filter(n => !isNaN(n));
+
+      let resultado = '';
+      for (let i = 0; i < qtdJogos; i++) {
+        let palpite = gerarPalpite(qtdPares, excluir);
+        let soma = palpite.reduce((acc, cur) => acc + cur, 0);
+        resultado += `
+          <div class="palpite">
+            ${palpite.join(' - ')}
+            <div class="soma">Soma: ${soma}</div>
+            <div class="copiar" onclick="copiarTexto('${palpite.join(' - ')}')">Copiar</div>
+          </div>
+        `;
+      }
+      document.getElementById('palpites').innerHTML = resultado;
+    }
+
+    function gerarPalpite(qtdPares, excluir) {
+      let numeros = [];
+      let pares = [];
+      let impares = [];
+
+      for (let i = 1; i <= 25; i++) {
+        if (!excluir.includes(i)) {
+          if (i % 2 === 0) pares.push(i);
+          else impares.push(i);
+        }
+      }
+
+      let selecionados = [];
+
+      while (selecionados.length < qtdPares && pares.length > 0) {
+        let n = pares.splice(Math.floor(Math.random() * pares.length), 1)[0];
+        selecionados.push(n);
+      }
+
+      while (selecionados.length < 15 && impares.length > 0) {
+        let n = impares.splice(Math.floor(Math.random() * impares.length), 1)[0];
+        selecionados.push(n);
+      }
+
+      // Se ainda não tiver 15 números, completar com qualquer número restante
+      let resto = pares.concat(impares);
+      while (selecionados.length < 15 && resto.length > 0) {
+        let n = resto.splice(Math.floor(Math.random() * resto.length), 1)[0];
+        selecionados.push(n);
+      }
+
+      return selecionados.sort((a, b) => a - b);
+    }
+
+    function copiarTexto(texto) {
+      navigator.clipboard.writeText(texto).then(() => {
+        alert("Palpite copiado!");
+      });
+    }
+  </script>
+</body>
+</html>
